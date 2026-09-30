@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Yılan.io — Nitro</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0b1220;color:#e2e8f0;font-family:system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 14px) 14px 14px;gap:12px;overflow-y:auto;overflow-x:hidden;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.screen.on{display:flex}
+h1{margin:6px 0;font-size:34px}
+h2{margin:4px 0}
+.btn{border:0;border-radius:14px;padding:14px 26px;font-size:18px;font-weight:700;background:#22c55e;color:#052e16;width:100%;max-width:340px}
+.btn.alt{background:#334155;color:#e2e8f0}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45}
+.chip{background:#1e293b;border-radius:999px;padding:6px 14px;font-weight:700}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.bar{width:100%;max-width:340px;height:12px;background:#1e293b;border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#a78bfa);transition:width .4s}
+.tabs{display:flex;gap:6px;width:100%;max-width:400px}
+.tabs button{flex:1;border:0;border-radius:10px;padding:10px 2px;background:#1e293b;color:#cbd5e1;font-weight:700;font-size:13px}
+.tabs button.on{background:#6366f1;color:#fff}
+.list{width:100%;max-width:400px;display:flex;flex-direction:column;gap:8px;padding-bottom:20px}
+.item{display:flex;align-items:center;gap:10px;background:#1e293b;border-radius:14px;padding:10px}
+.item .pv{width:56px;height:24px;border-radius:12px;flex:none}
+.item .inf{flex:1;font-size:14px;word-break:break-word}
+.item .inf small{display:block;color:#94a3b8;word-break:break-word}
+.item button{border:0;border-radius:10px;padding:9px 12px;font-weight:700;background:#f59e0b;color:#1c1917;min-width:78px}
+.item button.eq{background:#22c55e}
+.item button.on{background:#334155;color:#94a3b8}
+textarea,input{user-select:text;-webkit-user-select:text;touch-action:auto;width:100%;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:10px;font-size:13px}
+textarea{height:90px;font-size:11px;word-break:break-all}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:400px}
+.grid2 .btn{padding:11px 6px;font-size:14px;max-width:none}
+#hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-size:15px;z-index:3}
+canvas#c{border-radius:14px;box-shadow:0 0 0 3px #334155;width:min(94vw,52vh);height:min(94vw,52vh);display:block;background:#0f172a;transition:box-shadow .2s}
+canvas#c.nitro{box-shadow:0 0 0 3px #06b6d4, 0 0 32px rgba(6,182,212,.7)}
+#fx{min-height:22px;font-size:13px;font-weight:700;color:#fde047;text-align:center}
+#toast{position:fixed;top:calc(env(safe-area-inset-top) + 10px);left:50%;transform:translateX(-50%) translateY(-90px);background:#6366f1;color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;transition:.3s;z-index:9;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+#pads{display:flex;justify-content:flex-end;align-items:center;padding:8px 14px 8px 0;width:100%}
+#rightPad{display:flex;justify-content:flex-end;align-items:center;gap:22px}
+.joy{position:relative;width:140px;height:140px;border-radius:50%;flex:none;
+  background:radial-gradient(circle at 50% 50%,rgba(30,41,59,.9) 0%,rgba(15,23,42,.95) 100%);
+  box-shadow:inset 0 0 0 3px #334155, 0 0 24px rgba(56,189,248,.15);
+  touch-action:none}
+.joy::before,.joy::after{content:"";position:absolute;background:rgba(148,163,184,.15);pointer-events:none}
+.joy::before{left:50%;top:15%;bottom:15%;width:1px;transform:translateX(-50%)}
+.joy::after{top:50%;left:15%;right:15%;height:1px;transform:translateY(-50%)}
+.knob{position:absolute;left:50%;top:50%;width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#60a5fa,#2563eb 70%);
+  box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.15);
+  transform:translate(-50%,-50%);pointer-events:none;transition:background .15s}
+.joy.p2 .knob{background:radial-gradient(circle at 35% 30%,#f472b6,#db2777 70%)}
+.joy.p2{box-shadow:inset 0 0 0 3px #334155, 0 0 24px rgba(244,114,182,.2)}
+.joy .lbl{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:12px;color:#94a3b8;font-weight:700}
+
+#nitroWrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
+#nitroBtn{position:relative;width:84px;height:84px;border-radius:50%;border:0;
+  background:radial-gradient(circle at 35% 30%,#67e8f9,#0891b2 70%);
+  box-shadow:0 4px 16px rgba(0,0,0,.5), inset 0 0 0 3px rgba(255,255,255,.2), 0 0 22px rgba(6,182,212,.6);
+  color:#fff;font-size:34px;font-weight:900;touch-action:none;user-select:none;
+  display:flex;align-items:center;justify-content:center;transition:transform .08s, box-shadow .15s}
+#nitroBtn:active,#nitroBtn.on{transform:scale(.93);box-shadow:0 2px 8px rgba(0,0,0,.6), inset 0 0 0 3px #fff, 0 0 32px rgba(6,182,212,1)}
+#nitroBtn.empty{opacity:.35;box-shadow:0 4px 16px rgba(0,0,0,.5), inset 0 0 0 3px rgba(255,255,255,.15);background:radial-gradient(circle at 35% 30%,#64748b,#334155 70%)}
+#nitroBar{width:84px;height:8px;background:#1e293b;border-radius:9px;overflow:hidden;box-shadow:0 0 0 2px #334155}
+#nitroBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#22d3ee,#06b6d4);transition:width .1s linear}
+#nitroLbl{font-size:11px;color:#67e8f9;font-weight:700;letter-spacing:1px}
+body.twoP #nitroWrap{display:none}
+
+#menu{justify-content:flex-start;gap:10px;background:radial-gradient(circle at 50% 30%,#1b2a4a 0%,#0b1220 70%),#0b1220}
+#menu::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(148,163,184,.25) 1.5px,transparent 1.5px);background-size:26px 26px}
+#menu>*{position:relative;z-index:1}
+.mcol{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+.logo{font-size:52px;font-weight:900;letter-spacing:-2px;margin-top:8px;color:#fff;text-shadow:0 0 12px #22c55e,0 0 30px #22c55e,0 4px 0 #14532d}
+.logo span{color:#4ade80}
+#pv{width:min(90vw,340px);height:auto;filter:drop-shadow(0 0 14px rgba(74,222,128,.35))}
+.skinsel{display:flex;align-items:center;gap:14px;font-weight:700}
+.skinsel button{width:44px;height:44px;border:0;border-radius:50%;background:#1e293b;color:#fff;font-size:18px;box-shadow:0 0 0 2px #334155}
+.skinsel button:active{background:#334155}
+#skName{min-width:120px;text-align:center;font-size:18px}
+#nick{max-width:300px;text-align:center;font-size:18px;font-weight:700;border-radius:999px;padding:12px;border:2px solid #334155;background:rgba(15,23,42,.8)}
+.play{border:0;border-radius:999px;width:100%;max-width:300px;padding:16px;font-size:26px;font-weight:900;background:linear-gradient(#4ade80,#16a34a);color:#052e16;box-shadow:0 5px 0 #14532d,0 0 24px rgba(34,197,94,.5)}
+.play:active{transform:translateY(4px);box-shadow:0 1px 0 #14532d}
+.play.mp{font-size:18px;padding:12px;background:linear-gradient(#7dd3fc,#0ea5e9);color:#082f49;box-shadow:0 4px 0 #075985}
+.play.mp:active{box-shadow:0 1px 0 #075985}
+.dock{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.dock button{border:0;border-radius:16px;padding:10px 14px;background:rgba(30,41,59,.9);color:#e2e8f0;font-weight:700;font-size:14px;box-shadow:0 0 0 2px #334155}
+.dock button:active{background:#334155}
+.xpwrap{width:100%;max-width:300px;text-align:center;font-size:13px;color:#94a3b8}
+
+#mini{position:fixed;top:calc(env(safe-area-inset-top) + 60px);right:14px;border-radius:8px;box-shadow:0 0 0 2px #334155;opacity:.9;z-index:5;display:none;background:#0f172a}
+#mini.on{display:block}
+
+@media (orientation:landscape){
+  .screen{padding:calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 14px) 8px calc(env(safe-area-inset-left) + 14px)}
+  #menu{flex-direction:row;justify-content:center;align-items:center;gap:24px}
+  #menu .mcol{width:46%;max-width:360px;gap:8px}
+  .logo{font-size:38px;margin-top:0}
+  #pv{width:min(44vw,300px)}
+  .play{padding:12px;font-size:22px}
+  .play.mp{padding:10px;font-size:16px}
+  #nick{padding:9px;font-size:16px}
+  .skinsel button{width:38px;height:38px}
+  #game{flex-direction:row;justify-content:center;align-items:center;gap:18px;padding:8px calc(env(safe-area-inset-right) + 10px) 8px calc(env(safe-area-inset-left) + 10px)}
+  #hud{position:absolute;top:calc(env(safe-area-inset-top) + 4px);left:50%;transform:translateX(-50%);z-index:2;font-size:13px;flex-wrap:nowrap}
+  #hud .chip{padding:4px 10px}
+  canvas#c{width:min(calc(100vh - 90px),50vw);height:min(calc(100vh - 90px),50vw);margin-top:26px}
+  #fx{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);min-height:0;font-size:11px;white-space:nowrap}
+  #pads{order:1;justify-content:flex-end;padding:0 10px 0 0;width:auto}
+  #rightPad{order:1}
+  .joy{width:120px;height:120px}
+  .knob{width:52px;height:52px}
+  #nitroBtn{width:78px;height:78px;font-size:30px}
+  #nitroBar{width:78px}
+  #joyR{display:none}
+  body.twoP #joyR{display:block}
+  #over{gap:6px}
+  #over h1{font-size:26px;margin:0}
+  #over .list{font-size:15px !important;line-height:1.4 !important;padding-bottom:4px}
+  #over .btn{padding:9px;font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="screen on" id="menu">
+  <div class="mcol">
+    <div class="logo">yılan<span>.io</span></div>
+    <canvas id="pv" width="320" height="130"></canvas>
+    <div class="skinsel">
+      <button id="skPrev">◀</button><span id="skName"></span><button id="skNext">▶</button>
+    </div>
+  </div>
+  <div class="mcol">
+    <input id="nick" maxlength="12" placeholder="Takma adın" autocomplete="off">
+    <button class="play" onclick="startGame()">Oyna</button>
+    <button class="play mp" onclick="show('mp')">⚔️ Çok Oyunculu</button>
+    <div class="xpwrap">
+      Seviye <b id="mLvl">1</b> · <span id="mXp"></span> · 🪙 <b id="mCoin">0</b> · 🏆 <b id="mBest">0</b>
+      <div class="bar" style="margin:6px auto;max-width:300px"><i id="mBar"></i></div>
+    </div>
+    <div class="dock">
+      <button onclick="openShop()">🛒 Mağaza</button>
+      <button onclick="show('help')">❓ Yardım</button>
+      <button onclick="openAdminLogin()">🔐 Admin</button>
+      <button id="modeBtn" onclick="toggleMode()"></button>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="mp">
+  <h2>⚔️ Çok Oyunculu</h2>
+  <button class="btn" onclick="startLocal()">📱 Aynı Cihazda 2 Kişi</button>
+  <button class="btn alt" onclick="hostInit()">🌐 Oda Kur (Online)</button>
+  <button class="btn alt" onclick="joinInit()">🔗 Odaya Katıl (Online)</button>
+  <div class="list" id="mpBox" style="display:none"></div>
+  <button class="btn alt" onclick="closeConn();show('menu')">← Geri</button>
+</div>
+
+<div class="screen" id="admLogin">
+  <h2>🔐 Admin Aktivasyonu</h2>
+  <div class="list">
+    <input id="admCode" type="password" placeholder="Aktivasyon kodu" autocomplete="off">
+    <button class="btn" onclick="admLogin()">Giriş</button>
+  </div>
+  <button class="btn alt" onclick="show('menu')">← Geri</button>
+</div>
+
+<div class="screen" id="admin">
+  <h2>🛠 Admin Paneli</h2>
+  <div class="list" id="admBox"></div>
+  <button class="btn alt" onclick="admExit()">🚪 Çıkış</button>
+</div>
+
+<div class="screen" id="shop">
+  <h2>🛒 Mağaza</h2>
+  <div class="row"><span class="chip">🪙 <b id="sCoin">0</b></span><span class="chip">⭐ Sv. <b id="sLvl">1</b></span></div>
+  <div class="tabs" id="tabs">
+    <button data-t="skin">🐍 Yılan</button>
+    <button data-t="theme">🎨 Tema</button>
+    <button data-t="up">⚡ Güç</button>
+    <button data-t="ms">📜 Görev</button>
+  </div>
+  <div class="list" id="list"></div>
+  <button class="btn alt" onclick="show('menu')">← Geri</button>
+</div>
+
+<div class="screen" id="help">
+  <h2>❓ Nasıl Oynanır</h2>
+  <div class="list" style="line-height:1.6">
+    <div class="item">🕹️ Joystick'i sürükleyerek yönlendir. WASD/ok tuşları da çalışır.</div>
+    <div class="item">💨 <b>Nitro:</b> Sağdaki mavi butona basılı tut → yılan 2.5x hızlanır, görüş alanı genişler. Klavyede <b>Shift</b>.</div>
+    <div class="item">🍎 Her yem yediğinde yılanın 1 kare uzar.</div>
+    <div class="item">⭐ Altın yem: +3 skor, +3 coin, +20 XP.</div>
+    <div class="item">🛡️ Kalkan: Bir ölümcül çarpmayı yok eder</div>
+    <div class="item">🤖 <b>28 bot</b> etrafta geziyor. Kafanı onlara çarparsan ölürsün, gövdeye çarparsan büyürsün.</div>
+    <div class="item"><b>Büyük Harita:</b> 256×256 kare. Sınıra çarpınca ölmezsin.</div>
+  </div>
+  <button class="btn alt" onclick="show('menu')">← Geri</button>
+</div>
+
+<div class="screen" id="game" style="justify-content:center">
+  <div id="hud">
+    <span class="chip">Skor <b id="gScore">0</b></span>
+    <span class="chip" id="chipCoin">🪙 <b id="gCoin">0</b></span>
+    <span class="chip">Sv. <b id="gLvl">1</b></span>
+    <span class="chip" id="posChip">📍 <b id="gPos">128,128</b></span>
+    <button class="chip" id="pauseBtn" style="border:0;color:#fff" onclick="togglePause()">⏸</button>
+  </div>
+  <canvas id="c" width="400" height="400"></canvas>
+  <canvas id="mini" width="130" height="130"></canvas>
+  <div id="fx"></div>
+  <div id="pads">
+    <div id="rightPad">
+      <div class="joy" id="joyL">
+        <div class="knob" id="knobL"></div>
+        <div class="lbl" id="lblL">P1</div>
+      </div>
+      <div id="nitroWrap">
+        <button id="nitroBtn">💨</button>
+        <div id="nitroBar"><i id="nitroFill"></i></div>
+        <div id="nitroLbl">NITRO</div>
+      </div>
+      <div class="joy p2" id="joyR" style="display:none">
+        <div class="knob" id="knobR"></div>
+        <div class="lbl" id="lblR">P2</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="over" style="justify-content:center;background:rgba(11,18,32,.96)">
+  <h1 id="overTitle">Oyun Bitti</h1>
+  <div class="list" id="sum" style="text-align:center;font-size:18px;line-height:1.8"></div>
+  <button class="btn" id="again">🔄 Tekrar Oyna</button>
+  <button class="btn alt" onclick="openShop()">🛒 Mağaza</button>
+  <button class="btn alt" onclick="leave()">🏠 Menü</button>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+/* ---------- VERİ ---------- */
+const SKINS = [
+  {id:'green', n:'Klasik', p:0, h:'#4ade80', b:'#22c55e'},
+  {id:'blue', n:'Okyanus', p:100, h:'#93c5fd', b:'#3b82f6'},
+  {id:'orange', n:'Ateş', p:150, h:'#fde047', b:'#f97316'},
+  {id:'pink', n:'Pembe Rüya', p:200, h:'#f9a8d4', b:'#ec4899'},
+  {id:'purple', n:'Ametist', p:300, h:'#d8b4fe', b:'#9333ea', lv:3},
+  {id:'ghost', n:'Hayalet', p:500, h:'#ffffff', b:'rgba(255,255,255,.55)', lv:5},
+  {id:'rainbow', n:'Gökkuşağı', p:800, rainbow:1, lv:8},
+  {id:'gold', n:'Altın Ejder', p:1500, h:'#fef08a', b:'#eab308', glow:1, lv:12}
+];
+const BOT_SKINS = [
+  {h:'#fca5a5', b:'#dc2626'},
+  {h:'#d8b4fe', b:'#7c3aed'},
+  {h:'#5eead4', b:'#0d9488'},
+  {h:'#fcd34d', b:'#d97706'},
+  {h:'#f9a8d4', b:'#be185d'},
+  {h:'#a5f3fc', b:'#0891b2'},
+  {h:'#c7d2fe', b:'#4f46e5'},
+  {h:'#bbf7d0', b:'#16a34a'}
+];
+const THEMES = [
+  {id:'dark', n:'Gece', p:0, bg:'#1e293b', gr:'rgba(255,255,255,.05)'},
+  {id:'forest', n:'Orman', p:120, bg:'#14532d', gr:'rgba(255,255,255,.07)', lv:2},
+  {id:'sand', n:'Çöl', p:180, bg:'#78350f', gr:'rgba(255,255,255,.08)', lv:4},
+  {id:'ice', n:'Buz', p:250, bg:'#164e63', gr:'rgba(255,255,255,.09)', lv:6},
+  {id:'neon', n:'Neon', p:500, bg:'#000000', gr:'rgba(0,255,200,.15)', lv:10}
+];
+const UPS = [
+  {id:'coin', n:'Coin Bonusu', d:'Her seviye +%15 coin', max:5, cost:l=>150*(l+1)},
+  {id:'xp', n:'XP Bonusu', d:'Her seviye +%15 XP', max:5, cost:l=>150*(l+1)},
+  {id:'slow', n:'Yavaş Başlangıç', d:'Oyun daha yavaş başlar', max:3, cost:l=>200*(l+1)},
+  {id:'shield', n:'Başlangıç Kalkanı', d:'Oyuna kalkanla başla', max:1, cost:l=>500},
+  {id:'nitro', n:'Nitro Kapasitesi', d:'Her seviye +%30 nitro süresi', max:5, cost:l=>250*(l+1)}
+];
+const MS = [
+  {t:'Toplam 50 yem ye', g:50, r:100},
+  {t:'Tek oyunda 15 skor yap', g:15, r:150},
+  {t:'10 oyun oyna', g:10, r:200},
+  {t:'Çok oyunculuda toplam 10 kill al', g:10, r:250}
+];
+const POW = {gold:{e:'⭐'}, shield:{e:'🛡️'}, slow:{e:'🐢'}, x2:{e:'💰'}};
+
+const def = () => ({coins:0,xp:0,lvl:1,best:0,skin:'green',theme:'dark',nick:'',
+  own:['green','dark'],up:{coin:0,xp:0,slow:0,shield:0,nitro:0},mode:'wrap',ms:[0,0,0,0],mc:[0,0,0,0]});
+let S;
+try { S = Object.assign(def(), JSON.parse(localStorage.getItem('snakePro') || '{}')); } catch(e){ S = def(); }
+if (!Array.isArray(S.own)) S.own = ['green','dark'];
+if (!S.up) S.up = {coin:0,xp:0,slow:0,shield:0,nitro:0};
+if (typeof S.up.nitro !== 'number') S.up.nitro = 0;
+
+const save = () => {
+  try {
+    if (!Array.isArray(S.own) || !S.own.length) S.own = ['green','dark'];
+    if (!S.own.includes(S.skin)) S.skin = 'green';
+    if (!S.own.includes(S.theme)) S.theme = 'dark';
+    localStorage.setItem('snakePro', JSON.stringify(S));
+  } catch(e){}
+};
+const need = l => 80 + l * 40;
+
+const ADMIN_CODE = '/ADMİN97';
+const adm = {ok:false, god:false, speed:1, fails:0, lock:0, rgod:false, quick:false, target:0};
+
+/* ---------- HARİTA & KAMERA ---------- */
+const MAP = 256;
+const TILE = 32;
+const VIEW_BASE = 400;
+const VIEW_NITRO = 520;
+const WORLD = MAP * TILE;
+let VIEW = VIEW_BASE;
+let HALF = VIEW / 2;
+let _scale = 400 / VIEW;
+
+function recomputeScale(){
+  _scale = 400 / VIEW;
+  HALF = VIEW / 2;
+}
+
+/* ---------- YARDIMCI ---------- */
+let paused = true, vRun = false;
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  const el = $(id);
+  if (!el) return;
+  el.classList.add('on');
+  if (id === 'menu') refreshMenu();
+  if (id === 'admin') renderAdmin();
+  if (id !== 'game'){ paused = true; vRun = false; nitroHeld = false; nitroActive = false; }
+  $('mini').classList.toggle('on', id === 'game');
+}
+let tt;
+function toast(t){
+  const el = $('toast'); if (!el) return;
+  el.textContent = t; el.classList.add('show');
+  clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 2200);
+}
+let ac;
+function beep(f, d = .08, type = 'square'){
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = f; g.gain.value = .05;
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
+  } catch(e){}
+}
+function vib(n){ if (navigator.vibrate) navigator.vibrate(n); }
+
+function addXp(n){
+  S.xp += n;
+  while (S.xp >= need(S.lvl)){
+    S.xp -= need(S.lvl); S.lvl++;
+    const bonus = 50 + S.lvl * 5; S.coins += bonus;
+    toast('🎉 Seviye ' + S.lvl + '! +' + bonus + ' 🪙');
+    beep(880, .2, 'triangle');
+  }
+}
+
+/* ---------- MENÜ ---------- */
+const pvc = $('pv'), pctx = pvc.getContext('2d');
+let pvRun = false;
+function ownedSkins(){ return SKINS.filter(k => S.own.includes(k.id)); }
+
+function validateSkin(){
+  const o = ownedSkins();
+  if (!o.length){
+    if (!S.own.includes('green')) S.own.push('green');
+    S.skin = 'green';
+    save();
+    return;
+  }
+  if (!S.own.includes(S.skin)){
+    S.skin = o[0].id;
+    save();
+  }
+}
+
+function cycleSkin(d){
+  validateSkin();
+  const o = ownedSkins();
+  if (!o.length) return;
+  let i = o.findIndex(k => k.id === S.skin);
+  if (i < 0) i = 0;
+  i = (i + d + o.length) % o.length;
+  S.skin = o[i].id;
+  save();
+  $('skName').textContent = o[i].n;
+  beep(500, .05);
+}
+$('skPrev').onclick = () => cycleSkin(-1);
+$('skNext').onclick = () => cycleSkin(1);
+$('nick').addEventListener('input', e => { S.nick = e.target.value.slice(0, 12); save(); });
+
+function pvLoop(t){
+  if (!$('menu').classList.contains('on')){ pvRun = false; return; }
+  const sk = SKINS.find(k => k.id === S.skin) || SKINS[0];
+  pctx.clearRect(0, 0, 320, 130);
+  const n = 26;
+  for (let i = n - 1; i >= 0; i--){
+    const x = 290 - i * 10.5;
+    const y = 65 + Math.sin(t / 320 - i * 0.42) * 22;
+    const r = i === 0 ? 13 : Math.max(5, 12 - i * 0.22);
+    let col = i === 0 ? sk.h : sk.b;
+    if (sk.rainbow) col = 'hsl(' + ((i * 20 + t / 8) % 360) + ',85%,' + (i ? 55 : 70) + '%)';
+    pctx.fillStyle = col;
+    if (sk.glow){ pctx.shadowColor = '#fde047'; pctx.shadowBlur = 12; }
+    pctx.beginPath(); pctx.arc(x, y, r, 0, Math.PI * 2); pctx.fill();
+    pctx.shadowBlur = 0;
+    if (i === 0){
+      pctx.fillStyle = '#fff';
+      pctx.beginPath(); pctx.arc(x + 4, y - 6, 4, 0, Math.PI * 2); pctx.arc(x + 4, y + 6, 4, 0, Math.PI * 2); pctx.fill();
+      pctx.fillStyle = '#0f172a';
+      pctx.beginPath(); pctx.arc(x + 6, y - 6, 2, 0, Math.PI * 2); pctx.arc(x + 6, y + 6, 2, 0, Math.PI * 2); pctx.fill();
+    }
+  }
+  requestAnimationFrame(pvLoop);
+}
+
+function refreshMenu(){
+  validateSkin();
+  $('mCoin').textContent = S.coins;
+  $('mBest').textContent = S.best;
+  $('mLvl').textContent = S.lvl;
+  $('mXp').textContent = S.xp + '/' + need(S.lvl) + ' XP';
+  $('mBar').style.width = (S.xp / need(S.lvl) * 100) + '%';
+  $('modeBtn').textContent = S.mode === 'wall' ? '🧱 Klasik' : '🌀 Sınırsız';
+  const sk = SKINS.find(k => k.id === S.skin) || SKINS[0];
+  $('skName').textContent = sk.n;
+  $('nick').value = S.nick || '';
+  if (!pvRun){ pvRun = true; requestAnimationFrame(pvLoop); }
+}
+function toggleMode(){ S.mode = S.mode === 'wall' ? 'wrap' : 'wall'; save(); refreshMenu(); }
+
+/* ---------- MAĞAZA ---------- */
+let tab = 'skin';
+function openShop(){ show('shop'); renderShop(); }
+$('tabs').onclick = e => { const t = e.target.dataset.t; if (t){ tab = t; renderShop(); } };
+
+function el(tag, cls, txt){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
+  return e;
+}
+
+function renderShop(){
+  $('sCoin').textContent = S.coins; $('sLvl').textContent = S.lvl;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  const list = $('list');
+  list.innerHTML = '';
+  if (tab === 'skin' || tab === 'theme'){
+    const arr = tab === 'skin' ? SKINS : THEMES, cur = S[tab];
+    arr.forEach(it => {
+      const own = S.own.includes(it.id), locked = it.lv && S.lvl < it.lv;
+      const row = el('div', 'item');
+      const pv = el('div', 'pv');
+      if (tab === 'skin'){
+        pv.style.background = it.rainbow ? 'linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet)' : 'linear-gradient(90deg,' + it.b + ',' + it.h + ')';
+      } else {
+        pv.style.background = it.bg;
+        pv.style.border = '2px solid ' + it.gr;
+      }
+      const inf = el('div', 'inf');
+      inf.appendChild(document.createTextNode(it.n));
+      const sm = el('small', null, it.lv ? 'Gerekli seviye: ' + it.lv : 'Açık');
+      inf.appendChild(sm);
+      row.appendChild(pv); row.appendChild(inf);
+      if (cur === it.id){
+        const b = el('button', 'on', 'Seçili'); b.disabled = true; row.appendChild(b);
+      } else if (own){
+        const b = el('button', 'eq', 'Kullan');
+        b.onclick = () => equip(tab, it.id);
+        row.appendChild(b);
+      } else if (locked){
+        const b = el('button', null, '🔒 Sv.' + it.lv); b.disabled = true; row.appendChild(b);
+      } else {
+        const b = el('button', null, '🪙 ' + it.p);
+        b.onclick = () => buy(tab, it.id);
+        row.appendChild(b);
+      }
+      list.appendChild(row);
+    });
+  } else if (tab === 'up'){
+    UPS.forEach(u => {
+      const l = S.up[u.id] || 0, maxed = l >= u.max;
+      const row = el('div', 'item');
+      const inf = el('div', 'inf');
+      inf.appendChild(document.createTextNode(u.n + ' '));
+      const bold = el('b', null, '(' + l + '/' + u.max + ')');
+      inf.appendChild(bold);
+      inf.appendChild(el('small', null, u.d));
+      row.appendChild(inf);
+      if (maxed){
+        const b = el('button', 'on', 'MAX'); b.disabled = true; row.appendChild(b);
+      } else {
+        const b = el('button', null, '🪙 ' + u.cost(l));
+        b.onclick = () => upgrade(u.id);
+        row.appendChild(b);
+      }
+      list.appendChild(row);
+    });
+  } else {
+    MS.forEach((m, i) => {
+      const p = Math.min(S.ms[i] || 0, m.g), done = p >= m.g, claimed = S.mc[i];
+      const row = el('div', 'item');
+      const inf = el('div', 'inf');
+      inf.appendChild(document.createTextNode(m.t));
+      inf.appendChild(el('small', null, p + '/' + m.g + ' — Ödül: 🪙 ' + m.r));
+      row.appendChild(inf);
+      if (claimed){
+        const b = el('button', 'on', 'Alındı'); b.disabled = true; row.appendChild(b);
+      } else if (done){
+        const b = el('button', 'eq', 'Al');
+        b.onclick = () => claim(i);
+        row.appendChild(b);
+      } else {
+        const b = el('button', 'on', '...'); b.disabled = true; row.appendChild(b);
+      }
+      list.appendChild(row);
+    });
+  }
+}
+function buy(t, id){
+  const it = (t === 'skin' ? SKINS : THEMES).find(x => x.id === id);
+  if (!it) return;
+  if (S.coins < it.p) return toast('Yeterli coin yok!');
+  S.coins -= it.p; S.own.push(id); S[t] = id; save(); beep(660, .15); renderShop();
+}
+function equip(t, id){
+  if (t === 'skin' && !S.own.includes(id)) return;
+  if (t === 'theme' && !S.own.includes(id)) return;
+  S[t] = id; save(); renderShop();
+}
+function upgrade(id){
+  const u = UPS.find(x => x.id === id); if (!u) return;
+  const c = u.cost(S.up[id] || 0);
+  if (S.coins < c) return toast('Yeterli coin yok!');
+  S.coins -= c; S.up[id] = (S.up[id] || 0) + 1; save(); beep(660, .15); renderShop();
+}
+function claim(i){
+  if (S.mc[i]) return;
+  S.coins += MS[i].r; S.mc[i] = 1; save(); toast('+' + MS[i].r + ' 🪙'); renderShop();
+}
+
+/* ---------- ÇİZİM ---------- */
+const cv = $('c'), ctx = cv.getContext('2d');
+const mini = $('mini'), mctx = mini.getContext('2d');
+
+let cam = {x: WORLD/2, y: WORLD/2};
+
+function updateCam(targetX, targetY){
+  cam.x += (targetX - cam.x) * 0.25;
+  cam.y += (targetY - cam.y) * 0.25;
+  cam.x = Math.max(HALF, Math.min(WORLD - HALF, cam.x));
+  cam.y = Math.max(HALF, Math.min(WORLD - HALF, cam.y));
+}
+function snapCam(targetX, targetY){
+  cam.x = Math.max(HALF, Math.min(WORLD - HALF, targetX));
+  cam.y = Math.max(HALF, Math.min(WORLD - HALF, targetY));
+}
+function t2s(tx, ty){
+  return {
+    x: (tx*TILE + TILE/2 - cam.x + HALF) * _scale,
+    y: (ty*TILE + TILE/2 - cam.y + HALF) * _scale
+  };
+}
+function ts(){ return TILE * _scale; }
+
+function bgDraw(){
+  const th = THEMES.find(x => x.id === S.theme) || THEMES[0];
+  ctx.fillStyle = th.bg; ctx.fillRect(0, 0, 400, 400);
+
+  const scale = _scale;
+  const camLeft = cam.x - HALF, camTop = cam.y - HALF;
+  const c0 = Math.floor(camLeft / TILE), c1 = Math.ceil((camLeft + VIEW) / TILE);
+  const r0 = Math.floor(camTop / TILE), r1 = Math.ceil((camTop + VIEW) / TILE);
+
+  ctx.strokeStyle = th.gr; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = c0; i <= c1; i++){
+    const x = (i*TILE - camLeft) * scale;
+    ctx.moveTo(x, 0); ctx.lineTo(x, 400);
+  }
+  for (let j = r0; j <= r1; j++){
+    const y = (j*TILE - camTop) * scale;
+    ctx.moveTo(0, y); ctx.lineTo(400, y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = c0; i <= c1; i++){
+    if (i % 16 !== 0) continue;
+    const x = (i*TILE - camLeft) * scale;
+    ctx.moveTo(x, 0); ctx.lineTo(x, 400);
+  }
+  for (let j = r0; j <= r1; j++){
+    if (j % 16 !== 0) continue;
+    const y = (j*TILE - camTop) * scale;
+    ctx.moveTo(0, y); ctx.lineTo(400, y);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,.03)';
+  for (let i = c0; i <= c1; i++){
+    if (i % 64 !== 0) continue;
+    for (let j = r0; j <= r1; j++){
+      if (j % 64 !== 0) continue;
+      ctx.fillRect((i*TILE - camLeft) * scale + 1, (j*TILE - camTop) * scale + 1, TILE*scale - 2, TILE*scale - 2);
+    }
+  }
+
+  const left = (0 - camLeft) * scale, top = (0 - camTop) * scale;
+  const right = (WORLD - camLeft) * scale, bottom = (WORLD - camTop) * scale;
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (left >= 0 && left <= 400){ ctx.moveTo(left, 0); ctx.lineTo(left, 400); }
+  if (right >= 0 && right <= 400){ ctx.moveTo(right, 0); ctx.lineTo(right, 400); }
+  if (top >= 0 && top <= 400){ ctx.moveTo(0, top); ctx.lineTo(400, top); }
+  if (bottom >= 0 && bottom <= 400){ ctx.moveTo(0, bottom); ctx.lineTo(400, bottom); }
+  ctx.stroke();
+}
+function foodDraw(f, t){
+  const p = t2s(f.x, f.y);
+  const tile = ts();
+  if (p.x < -tile || p.y < -tile || p.x > 400 + tile || p.y > 400 + tile) return;
+  const pulse = Math.sin(t / 150 + f.x) * 1.5;
+  const col = f.type === 'big' ? '#fbbf24' : '#ef4444';
+  const radius = (f.type === 'big' ? tile/2 - 2 : tile/2 - 4) + pulse;
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(2, radius), 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#16a34a'; ctx.fillRect(p.x - 1, p.y - tile/2 + 1, Math.max(2, tile/8), Math.max(3, tile/5));
+}
+function drawSnake(sn, sk, d, t, isBot, trail){
+  if (!sn || !sn.length) return;
+  const tile = ts();
+  if (trail && trail.length){
+    trail.forEach((tr, idx) => {
+      const p = t2s(tr.x, tr.y);
+      const a = (1 - idx / trail.length) * 0.4;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#67e8f9';
+      ctx.beginPath(); ctx.roundRect(p.x - tile/2 + 2, p.y - tile/2 + 2, tile - 4, tile - 4, 6); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+  sn.forEach((s, i) => {
+    const p = t2s(s.x, s.y);
+    if (p.x < -tile || p.y < -tile || p.x > 400 + tile || p.y > 400 + tile) return;
+    let col = i === 0 ? sk.h : sk.b;
+    if (sk.rainbow) col = 'hsl(' + ((i * 25 + t / 8) % 360) + ',85%,' + (i ? 55 : 70) + '%)';
+    ctx.fillStyle = col;
+    if (sk.glow){ ctx.shadowColor = '#fde047'; ctx.shadowBlur = 10; }
+    ctx.beginPath(); ctx.roundRect(p.x - tile/2 + 1, p.y - tile/2 + 1, tile - 2, tile - 2, i ? Math.max(3, tile/5) : Math.max(4, tile/3)); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+  const hd = sn[0], hp = t2s(hd.x, hd.y);
+  if (hp.x < -tile || hp.y < -tile || hp.x > 400 + tile || hp.y > 400 + tile) return;
+  ctx.fillStyle = '#0f172a';
+  const eo = tile * 0.18;
+  [-1, 1].forEach(k => {
+    const px = hp.x + (d.x ? d.x*eo : k*eo);
+    const py = hp.y + (d.y ? d.y*eo : k*eo);
+    ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, tile/10), 0, Math.PI * 2); ctx.fill();
+  });
+  if (isBot){
+    ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('🤖', hp.x, hp.y - tile/2 - 2);
+  }
+}
+function drawMini(map, snakes, foods, camPos){
+  const mw = mini.width, mh = mini.height;
+  mctx.fillStyle = 'rgba(15,23,42,.92)'; mctx.fillRect(0, 0, mw, mh);
+  mctx.strokeStyle = '#334155'; mctx.lineWidth = 1; mctx.strokeRect(.5, .5, mw-1, mh-1);
+
+  mctx.strokeStyle = 'rgba(255,255,255,.06)';
+  for (let i = 1; i < 4; i++){
+    mctx.beginPath();
+    mctx.moveTo(i*mw/4, 0); mctx.lineTo(i*mw/4, mh);
+    mctx.moveTo(0, i*mh/4); mctx.lineTo(mw, i*mh/4);
+    mctx.stroke();
+  }
+
+  foods.forEach(f => {
+    mctx.fillStyle = f.type === 'big' ? '#fbbf24' : '#ef4444';
+    mctx.fillRect(f.x/MAP*mw, f.y/MAP*mh, 2, 2);
+  });
+  snakes.forEach((item) => {
+    const sn = item.sn || item;
+    if (!sn || !sn.length) return;
+    mctx.fillStyle = item.color || '#fff';
+    sn.forEach(s => mctx.fillRect(s.x/MAP*mw - 1, s.y/MAP*mh - 1, 2, 2));
+  });
+  const cw = VIEW / WORLD * mw, ch = VIEW / WORLD * mh;
+  const cx = (camPos.x - HALF) / WORLD * mw, cy = (camPos.y - HALF) / WORLD * mh;
+  mctx.strokeStyle = '#fde047'; mctx.lineWidth = 1.5;
+  mctx.strokeRect(cx, cy, cw, ch);
+}
+
+/* ---------- JOYSTICK ---------- */
+function makeJoy(joyEl, knobEl, onChange){
+  const R = 44;
+  let active = false, id = null, cx = 0, cy = 0;
+  const rectOf = () => joyEl.getBoundingClientRect();
+
+  function start(px, py){
+    const r = rectOf();
+    cx = r.left + r.width/2;
+    cy = r.top + r.height/2;
+    active = true;
+    move(px, py);
+  }
+  function move(px, py){
+    if (!active) return;
+    let dx = px - cx, dy = py - cy;
+    const len = Math.hypot(dx, dy);
+    const cl = Math.min(len, R);
+    const ux = len ? dx/len : 0, uy = len ? dy/len : 0;
+    knobEl.style.transform = 'translate(calc(-50% + ' + (ux*cl) + 'px), calc(-50% + ' + (uy*cl) + 'px))';
+    if (len < 12){ onChange(0, 0); return; }
+    let ang = Math.atan2(dy, dx);
+    let oct = Math.round(ang / (Math.PI/4));
+    const dirs = [
+      {x:1,y:0},{x:1,y:1},{x:0,y:1},{x:-1,y:1},
+      {x:-1,y:0},{x:-1,y:-1},{x:0,y:-1},{x:1,y:-1}
+    ];
+    const d = dirs[((oct % 8) + 8) % 8];
+    onChange(d.x, d.y);
+  }
+  function end(){
+    active = false; id = null;
+    knobEl.style.transform = 'translate(-50%,-50%)';
+    onChange(0, 0);
+  }
+  joyEl.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    id = t.identifier;
+    start(t.clientX, t.clientY);
+  }, {passive:false});
+  joyEl.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches){
+      if (t.identifier === id){ move(t.clientX, t.clientY); return; }
+    }
+  }, {passive:false});
+  const endTouch = e => {
+    for (const t of e.changedTouches){
+      if (t.identifier === id){ end(); return; }
+    }
+  };
+  joyEl.addEventListener('touchend', endTouch, {passive:false});
+  joyEl.addEventListener('touchcancel', endTouch, {passive:false});
+  joyEl.addEventListener('mousedown', e => { e.preventDefault(); start(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => { if (active) move(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', () => { if (active) end(); });
+}
+
+makeJoy($('joyL'), $('knobL'), (x, y) => { if (x || y) ctl(0, x, y); });
+makeJoy($('joyR'), $('knobR'), (x, y) => { if (x || y) ctl(1, x, y); });
+
+/* ---------- NITRO ---------- */
+const NITRO_MAX = 3000;
+const NITRO_REFILL = 6000;
+let nitroEnergy = NITRO_MAX;
+let nitroActive = false;
+let nitroHeld = false;
+let nitroSound = false;
+
+function nitroMax(){ return NITRO_MAX * (1 + 0.3 * (S.up.nitro || 0)); }
+function updateNitroBtn(){
+  const btn = $('nitroBtn'); if (!btn) return;
+  const fill = $('nitroFill');
+  const maxE = nitroMax();
+  const pct = Math.max(0, Math.min(1, nitroEnergy / maxE));
+  if (fill) fill.style.width = (pct * 100) + '%';
+  btn.classList.toggle('empty', nitroEnergy <= 50);
+  btn.classList.toggle('on', nitroActive);
+}
+
+function setupNitroBtn(){
+  const btn = $('nitroBtn'); if (!btn) return;
+  const press = e => {
+    if (e) e.preventDefault();
+    if (nitroEnergy > 50 && alive && mode === 'solo'){
+      nitroHeld = true;
+      if (!nitroSound){ nitroSound = true; beep(200, .05, 'sawtooth'); }
+    }
+  };
+  const release = e => {
+    if (e) e.preventDefault();
+    nitroHeld = false;
+    nitroSound = false;
+  };
+  btn.addEventListener('touchstart', press, {passive:false});
+  btn.addEventListener('touchend', release, {passive:false});
+  btn.addEventListener('touchcancel', release, {passive:false});
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+  addEventListener('keydown', e => {
+    if (e.key === 'Shift' && alive && mode === 'solo' && nitroEnergy > 50){ nitroHeld = true; }
+  });
+  addEventListener('keyup', e => {
+    if (e.key === 'Shift'){ nitroHeld = false; }
+  });
+}
+
+function nitroTick(dt){
+  if (mode !== 'solo' || !alive){ nitroActive = false; updateNitroBtn(); return; }
+  const maxE = nitroMax();
+  if (nitroHeld && nitroEnergy > 0){
+    nitroActive = true;
+    nitroEnergy -= dt;
+    if (nitroEnergy <= 0){ nitroEnergy = 0; nitroActive = false; nitroHeld = false; }
+  } else {
+    nitroActive = false;
+    if (nitroEnergy < maxE){
+      nitroEnergy = Math.min(maxE, nitroEnergy + dt * (maxE / NITRO_REFILL));
+    }
+  }
+  updateNitroBtn();
+}
+
+/* ---------- YEM SİSTEMİ ---------- */
+let foods = [];
+const FOOD_TARGET = 20;
+
+function spawnFood(type){
+  let p, tries = 0;
+  const wantBig = Math.random() < 0.15;
+  const t = type || (wantBig ? 'big' : 'small');
+  do {
+    p = {x: Math.random()*MAP|0, y: Math.random()*MAP|0, type: t};
+    tries++;
+    if (tries > 50) break;
+  } while (
+    (snake && snake.some(s => s.x === p.x && s.y === p.y)) ||
+    foods.some(f => f.x === p.x && f.y === p.y) ||
+    bots.some(b => b.sn.some(s => s.x === p.x && s.y === p.y))
+  );
+  foods.push(p);
+}
+function refillFoods(){
+  while (foods.length < FOOD_TARGET) spawnFood();
+}
+
+/* ---------- BOT ---------- */
+let bots = [];
+let pendingRespawn = [];
+const BOT_COUNT = 28;
+
+function botDecide(bot){
+  const hd = bot.sn[0];
+  let closest = null, cd = Infinity;
+  for (let i = 0; i < foods.length; i++){
+    const f = foods[i];
+    const d = Math.abs(f.x - hd.x) + Math.abs(f.y - hd.y);
+    if (d < cd){ cd = d; closest = f; }
+  }
+
+  const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+  let best = null, bestScore = -Infinity;
+
+  for (const d of dirs){
+    if (d.x === -bot.dir.x && d.y === -bot.dir.y) continue;
+    const nx = (hd.x + d.x + MAP) % MAP;
+    const ny = (hd.y + d.y + MAP) % MAP;
+    let dead = false;
+    for (let i = 0; i < bot.sn.length - 1; i++){
+      if (bot.sn[i].x === nx && bot.sn[i].y === ny){ dead = true; break; }
+    }
+    if (!dead && snake && snake.length){
+      for (let i = 0; i < snake.length - 1; i++){
+        if (snake[i].x === nx && snake[i].y === ny){ dead = true; break; }
+      }
+    }
+    if (!dead){
+      for (let bi = 0; bi < bots.length; bi++){
+        const b = bots[bi];
+        if (b === bot) continue;
+        for (let i = 0; i < b.sn.length - 1; i++){
+          if (b.sn[i].x === nx && b.sn[i].y === ny){ dead = true; break; }
+        }
+        if (dead) break;
+      }
+    }
+    if (dead) continue;
+
+    let risk = 0;
+    if (snake && snake.length){
+      const dh = Math.abs(snake[0].x - nx) + Math.abs(snake[0].y - ny);
+      if (dh <= 2) risk += 60; else if (dh <= 4) risk += 15;
+    }
+    for (const b of bots){
+      if (b === bot) continue;
+      const dh = Math.abs(b.sn[0].x - nx) + Math.abs(b.sn[0].y - ny);
+      if (dh <= 2){ risk += 30; break; }
+      else if (dh <= 4) risk += 6;
+    }
+    if (closest){
+      const dd = Math.abs(closest.x - nx) + Math.abs(closest.y - ny);
+      risk += dd * 0.4;
+    }
+    const sc = -risk;
+    if (sc > bestScore){ bestScore = sc; best = d; }
+  }
+  if (best) bot.nd = {x: best.x, y: best.y};
+  else bot.nd = {x: bot.dir.x, y: bot.dir.y};
+}
+
+function botStep(bot){
+  botDecide(bot);
+  bot.dir = bot.nd;
+  let h = {x: bot.sn[0].x + bot.dir.x, y: bot.sn[0].y + bot.dir.y};
+  if (h.x < 0) h.x = MAP - 1; else if (h.x >= MAP) h.x = 0;
+  if (h.y < 0) h.y = MAP - 1; else if (h.y >= MAP) h.y = 0;
+
+  let dead = false;
+  for (let i = 0; i < bot.sn.length - 1; i++){
+    if (bot.sn[i].x === h.x && bot.sn[i].y === h.y){ dead = true; break; }
+  }
+  if (!dead && snake && snake.length){
+    for (let i = 0; i < snake.length - 1; i++){
+      if (snake[i].x === h.x && snake[i].y === h.y){ dead = true; break; }
+    }
+  }
+  if (!dead){
+    for (const b of bots){
+      if (b === bot) continue;
+      for (let i = 0; i < b.sn.length - 1; i++){
+        if (b.sn[i].x === h.x && b.sn[i].y === h.y){ dead = true; break; }
+      }
+      if (dead) break;
+    }
+  }
+
+  if (dead){ botDie(bot); return; }
+
+  bot.sn.unshift(h);
+
+  let ate = false;
+  for (let i = foods.length - 1; i >= 0; i--){
+    const f = foods[i];
+    if (f.x === h.x && f.y === h.y){ foods.splice(i, 1); ate = true; break; }
+  }
+  if (!ate) bot.sn.pop();
+  if (bot.sn.length > 60 && !ate) bot.sn.pop();
+}
+
+function botDie(bot){
+  bot.sn.forEach((s, i) => {
+    if (i % 2 === 0) foods.push({x: s.x, y: s.y, type: 'small'});
+  });
+  pendingRespawn.push({t: performance.now() + 2500, skin: bot.sk});
+  const idx = bots.indexOf(bot);
+  if (idx >= 0) bots.splice(idx, 1);
+  burst({x: bot.sn[0].x, y: bot.sn[0].y}, '#ef4444');
+  score += 1;
+}
+function spawnBot(skin){
+  let tries = 0, cx, cy, ok = false;
+  while (tries++ < 60 && !ok){
+    cx = (Math.random() * MAP) | 0;
+    cy = (Math.random() * MAP) | 0;
+    if (snake && snake.length){
+      const dh = Math.abs(snake[0].x - cx) + Math.abs(snake[0].y - cy);
+      if (dh > 20) ok = true;
+    } else ok = true;
+  }
+  const len = 4 + (Math.random() * 5 | 0);
+  const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+  const d = dirs[(Math.random() * 4) | 0];
+  const sn = [];
+  for (let i = 0; i < len; i++){
+    sn.push({x: (cx - d.x*i + MAP) % MAP, y: (cy - d.y*i + MAP) % MAP});
+  }
+  const sk = skin || BOT_SKINS[(Math.random() * BOT_SKINS.length) | 0];
+  bots.push({sn, dir: {x: d.x, y: d.y}, nd: {x: d.x, y: d.y}, sk});
+}
+
+/* ---------- TEK KİŞİLİK ---------- */
+let mode = 'solo';
+let snake = null, dir = {x:1,y:0}, nd = {x:1,y:0};
+let score = 0, gCoins = 0, gXp = 0, shield = false, slowT = 0, x2T = 0;
+let last = 0, acc = 0, alive = false, parts = [], eaten = 0, pw = null;
+let trail = [];
+
+function startGame(){
+  validateSkin();
+  mode = 'solo';
+  const cx = MAP >> 1, cy = MAP >> 1;
+  snake = [{x:cx,y:cy},{x:cx-1,y:cy},{x:cx-2,y:cy}];
+  dir = nd = {x:1,y:0};
+  score = 0; gCoins = 0; gXp = 0; eaten = 0;
+  shield = S.up.shield > 0; slowT = 0; x2T = 0; pw = null; parts = [];
+  foods = []; bots = []; pendingRespawn = []; trail = [];
+  nitroEnergy = nitroMax(); nitroActive = false; nitroHeld = false;
+  for (let i = 0; i < FOOD_TARGET; i++) spawnFood();
+  for (let i = 0; i < BOT_COUNT; i++) spawnBot();
+  VIEW = VIEW_BASE; recomputeScale();
+  snapCam(cx*TILE + TILE/2, cy*TILE + TILE/2);
+  show('game'); layout(); paused = false; alive = true; last = performance.now(); acc = 0;
+  updHud(); updateNitroBtn(); requestAnimationFrame(loop);
+}
+function updHud(){
+  $('gScore').textContent = score; $('gCoin').textContent = gCoins; $('gLvl').textContent = S.lvl;
+  if (snake && snake[0]) $('gPos').textContent = snake[0].x + ',' + snake[0].y;
+  const fx = [];
+  if (shield) fx.push('🛡️ Kalkan');
+  if (adm.god) fx.push('👑 God');
+  if (slowT > 0) fx.push('🐢 ' + slowT);
+  if (x2T > 0) fx.push('💰x2 ' + x2T);
+  if (nitroActive) fx.push('💨 NITRO 2.5x');
+  fx.push('🤖 ' + bots.length);
+  $('fx').textContent = fx.join('  ');
+}
+function togglePause(){
+  if (!alive || mode !== 'solo') return;
+  paused = !paused;
+  if (!paused){ last = performance.now(); requestAnimationFrame(loop); } else toast('⏸ Duraklatıldı');
+}
+function interval(){
+  let v = 150 + S.up.slow * 12 - score * 2;
+  v = Math.max(75, v);
+  if (slowT > 0) v += 60;
+  return v * adm.speed;
+}
+function loop(t){
+  if (paused || !alive || mode !== 'solo') return;
+  if (!last) last = t;
+  const dt = Math.min(100, t - last);
+  acc += dt; last = t;
+
+  nitroTick(dt);
+
+  const targetVIEW = nitroActive ? VIEW_NITRO : VIEW_BASE;
+  if (Math.abs(VIEW - targetVIEW) > 0.5){
+    VIEW += (targetVIEW - VIEW) * 0.12;
+    recomputeScale();
+  }
+
+  const iv = interval();
+  const stepIv = nitroActive ? Math.max(24, iv * 0.4) : iv;
+  let safety = 12;
+  while (acc >= stepIv && safety-- > 0){ acc -= stepIv; step(); if (!alive) return; }
+
+  if (nitroActive && snake && snake.length){
+    const hd = snake[0];
+    const lastT = trail[0];
+    if (!lastT || lastT.x !== hd.x || lastT.y !== hd.y){
+      trail.unshift({x: hd.x, y: hd.y});
+      while (trail.length > 8) trail.pop();
+    }
+  } else {
+    if (trail.length) trail.pop();
+  }
+
+  draw(t);
+  requestAnimationFrame(loop);
+}
+
+function step(){
+  if (!snake || !snake.length) return;
+  dir = nd;
+
+  let h = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+  if (h.x < 0) h.x = MAP - 1;
+  else if (h.x >= MAP) h.x = 0;
+  if (h.y < 0) h.y = MAP - 1;
+  else if (h.y >= MAP) h.y = 0;
+
+  const selfHit = snake.some((s, i) => i < snake.length - 1 && s.x === h.x && s.y === h.y);
+
+  let botHit = null;
+  for (const b of bots){
+    for (let i = 0; i < b.sn.length - 1; i++){
+      if (b.sn[i].x === h.x && b.sn[i].y === h.y){ botHit = b; break; }
+    }
+    if (botHit) break;
+  }
+
+  let headOn = null;
+  for (const b of bots){
+    if (b.sn[0].x === h.x && b.sn[0].y === h.y){ headOn = b; break; }
+  }
+
+  if (selfHit || botHit || (headOn && headOn.sn.length >= snake.length)){
+    if (adm.god){
+      if (botHit) botDie(botHit);
+    } else if (shield){
+      shield = false; vib(80); beep(200, .2, 'sawtooth');
+      toast('🛡️ Kalkan seni kurtardı!');
+      if (botHit) botDie(botHit);
+    } else {
+      return over();
+    }
+  }
+
+  if (headOn && snake.length > headOn.sn.length) botDie(headOn);
+
+  snake.unshift(h);
+
+  let ate = false;
+  for (let i = foods.length - 1; i >= 0; i--){
+    const f = foods[i];
+    if (f.x === h.x && f.y === h.y){
+      const big = f.type === 'big';
+      foods.splice(i, 1);
+      score += big ? 3 : 1;
+      eaten++;
+      const mult = (x2T > 0 ? 2 : 1) * (1 + .15 * S.up.coin);
+      gCoins += Math.ceil((big ? 3 : 1) * mult);
+      gXp += Math.round((big ? 20 : 10) * (1 + .15 * S.up.xp));
+      burst(h, big ? '#fbbf24' : '#ef4444');
+      beep(big ? 800 : 520 + Math.min(score, 20) * 15, .07); vib(20);
+      spawnFood();
+      if (!pw && Math.random() < .2) spawnPow();
+      ate = true;
+      break;
+    }
+  }
+  if (!ate) snake.pop();
+
+  if (pw){
+    if (h.x === pw.x && h.y === pw.y){
+      burst(h, '#fde047'); beep(900, .15, 'triangle'); vib(40);
+      if (pw.type === 'gold'){ gCoins += 10; gXp += 30; toast('⭐ +10 🪙 +30 XP'); }
+      else if (pw.type === 'shield') shield = true;
+      else if (pw.type === 'slow') slowT = 40;
+      else x2T = 50;
+      pw = null;
+    } else if (--pw.ttl <= 0) pw = null;
+  }
+
+  for (let i = bots.length - 1; i >= 0; i--){
+    if (i < bots.length) botStep(bots[i]);
+  }
+
+  const now = performance.now();
+  if (pendingRespawn.length){
+    pendingRespawn = pendingRespawn.filter(r => {
+      if (now >= r.t){ spawnBot(r.skin); return false; }
+      return true;
+    });
+  }
+
+  refillFoods();
+
+  if (slowT > 0) slowT--;
+  if (x2T > 0) x2T--;
+  updHud();
+}
+function spawnPow(){
+  let p, tries = 0;
+  do {
+    p = {x: Math.random()*MAP|0, y: Math.random()*MAP|0};
+    tries++;
+    if (tries > 50) break;
+  } while (
+    (snake && snake.some(s => s.x === p.x && s.y === p.y)) ||
+    foods.some(f => f.x === p.x && f.y === p.y)
+  );
+  const types = ['gold','shield','slow','x2'];
+  pw = {x: p.x, y: p.y, type: types[Math.random()*4|0], ttl: 60};
+}
+
+function burst(p, col){
+  const sp = t2s(p.x, p.y);
+  for (let i = 0; i < 12; i++)
+    parts.push({x:sp.x, y:sp.y, vx:(Math.random()-.5)*5, vy:(Math.random()-.5)*5, l:1, c:col});
+}
+
+function draw(t){
+  if (!snake || !snake.length) return;
+  const hd = snake[0];
+  updateCam(hd.x*TILE + TILE/2, hd.y*TILE + TILE/2);
+
+  const sk = SKINS.find(x => x.id === S.skin) || SKINS[0];
+  bgDraw();
+
+  if (nitroActive){
+    ctx.fillStyle = 'rgba(6,182,212,.10)';
+    ctx.fillRect(0, 0, 400, 400);
+  }
+
+  for (const f of foods) foodDraw(f, t);
+  if (pw){
+    ctx.globalAlpha = pw.ttl < 15 && (t / 100 | 0) % 2 ? .3 : 1;
+    ctx.font = Math.max(10, ts() - 8) + 'px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const p = t2s(pw.x, pw.y);
+    ctx.fillText(POW[pw.type].e, p.x, p.y + 1);
+    ctx.globalAlpha = 1;
+  }
+  for (const b of bots) drawSnake(b.sn, b.sk, b.dir, t, true, null);
+  drawSnake(snake, sk, dir, t, false, trail);
+  if (shield){
+    const hp = t2s(snake[0].x, snake[0].y);
+    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(hp.x, hp.y, ts()/2 + 3, 0, Math.PI * 2); ctx.stroke();
+  }
+  parts = parts.filter(p => p.l > 0);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.l -= .04;
+    ctx.globalAlpha = Math.max(p.l, 0); ctx.fillStyle = p.c;
+    ctx.fillRect(p.x, p.y, 4, 4);
+  });
+  ctx.globalAlpha = 1;
+
+  const allSnakes = [{sn: snake, color: sk.h}];
+  for (const b of bots) allSnakes.push({sn: b.sn, color: b.sk.h});
+  drawMini(MAP, allSnakes, foods, cam);
+
+  cv.classList.toggle('nitro', nitroActive);
+}
+
+function setAgain(){
+  const b = $('again');
+  if (!b) return;
+  b.style.display = mode === 'guest' ? 'none' : '';
+  b.onclick = () => {
+    if (mode === 'local') startLocal();
+    else if (mode === 'host') hostStart();
+    else startGame();
+  };
+}
+
+function over(){
+  alive = false; vib([100, 50, 100]); beep(150, .4, 'sawtooth');
+  nitroActive = false; nitroHeld = false; updateNitroBtn();
+  cv.classList.remove('nitro');
+  const oldLvl = S.lvl;
+  const isBest = score > S.best;
+  if (isBest) S.best = score;
+  S.coins += gCoins;
+  addXp(gXp + score * 2);
+  S.ms[0] = (S.ms[0] || 0) + eaten;
+  S.ms[1] = Math.max(S.ms[1] || 0, score);
+  S.ms[2] = (S.ms[2] || 0) + 1;
+  save();
+  $('overTitle').textContent = 'Oyun Bitti';
+  $('sum').innerHTML =
+    'Skor: <b>' + score + '</b>' + (isBest ? ' 🏆 Yeni Rekor!' : '') + '<br>' +
+    'Kazanılan: 🪙 <b>' + gCoins + '</b> &nbsp; ⭐ <b>' + (gXp + score * 2) + ' XP</b><br>' +
+    'Seviye: <b>' + S.lvl + '</b>' + (S.lvl > oldLvl ? ' 🎉' : '') + ' &nbsp; Toplam 🪙 ' + S.coins;
+  setAgain();
+  show('over');
+}
+
+/* ---------- ÇOK OYUNCULU ---------- */
+const KILL_TARGET = 5, RESPAWN_TICKS = 10, SPAWN_PROTECT = 15, KILL_GROW = 3;
+let V = null, vLoop = false, vEnded = false, gSkin = null, lastFid = -1;
+
+function pickSkins(){
+  const a = S.skin;
+  let b = mode === 'local' ? 'blue' : (gSkin || 'blue');
+  if (b === a) b = a === 'blue' ? 'orange' : 'blue';
+  return [a, b];
+}
+function spawnCells(i){
+  const cx = MAP >> 1;
+  const base = i === 0 ? {x:cx-40, y:cx, dx:1} : {x:cx+40, y:cx, dx:-1};
+  return [0,1,2].map(k => ({x: base.x - k * base.dx, y: base.y}));
+}
+function initV(){
+  V = {
+    rid: Date.now(),
+    sn: [spawnCells(0), spawnCells(1)],
+    dr: [{x:1,y:0},{x:-1,y:0}], nd: [{x:1,y:0},{x:-1,y:0}],
+    food: null, sc: [0,0], k: [0,0], rs: [0,0], inv: [0,0], gr: [0,0],
+    feed: '', fid: 0, target: adm.target || KILL_TARGET,
+    over: false, win: -1,
+    sk: pickSkins(), th: S.theme, wrap: true
+  };
+  V.food = vfree();
+  vEnded = false; lastFid = 0;
+}
+function vfree(){
+  let p, tries = 0;
+  do { p = {x:Math.random()*MAP|0, y:Math.random()*MAP|0}; tries++; if (tries > 200) break; }
+  while (V.sn.some(sn => sn.some(s => s.x === p.x && s.y === p.y)));
+  return p;
+}
+function setV(i, x, y){
+  if (!V || V.over) return;
+  const d = V.dr[i];
+  if (x === -d.x && y === -d.y) return;
+  V.nd[i] = {x, y};
+}
+function respawn(i){
+  const cells = spawnCells(i), o = V.sn[1 - i];
+  if (cells.some(c => o.some(s => s.x === c.x && s.y === c.y))) return false;
+  V.sn[i] = cells;
+  V.dr[i] = V.nd[i] = {x: i === 0 ? 1 : -1, y: 0};
+  V.inv[i] = SPAWN_PROTECT;
+  return true;
+}
+const kill = k => (k[0] >= 0 || k[1] >= 0) ? 700 : 200;
+function vstep(){
+  if (!V || V.over) return;
+  for (let i = 0; i < 2; i++){
+    if (V.rs[i] > 0){ V.rs[i]--; if (V.rs[i] === 0 && !respawn(i)) V.rs[i] = 1; }
+    if (V.inv[i] > 0) V.inv[i]--;
+  }
+  V.dr = V.nd.slice();
+  const alive = [0,1].map(i => V.rs[i] === 0 && V.sn[i].length > 0);
+  const H = [0,1].map(i => alive[i] ? {x: V.sn[i][0].x + V.dr[i].x, y: V.sn[i][0].y + V.dr[i].y} : null);
+  const die = [false, false], killer = [-1, -1];
+
+  [0,1].forEach(i => {
+    if (!alive[i]) return;
+    const h = H[i];
+    if (h.x < 0) h.x = MAP - 1; else if (h.x >= MAP) h.x = 0;
+    if (h.y < 0) h.y = MAP - 1; else if (h.y >= MAP) h.y = 0;
+    [0,1].forEach(j => {
+      if (!alive[j]) return;
+      V.sn[j].forEach((s, k) => {
+        if (k < V.sn[j].length - 1 && s.x === h.x && s.y === h.y){
+          die[i] = true;
+          if (j !== i) killer[i] = j;
+        }
+      });
+    });
+  });
+  if (alive[0] && alive[1] && H[0].x === H[1].x && H[0].y === H[1].y){
+    const a = V.sn[0].length, b = V.sn[1].length;
+    if (a > b){ die[1] = true; killer[1] = 0; }
+    else if (b > a){ die[0] = true; killer[0] = 1; }
+    else { die[0] = die[1] = true; }
+  }
+  const gd = [adm.god, mode === 'local' ? adm.god : adm.rgod];
+  [0,1].forEach(i => {
+    if (V.inv[i] > 0 || gd[i]){
+      die[i] = false; killer[i] = -1;
+      if (H[i]){
+        if (H[i].x < 0) H[i].x = MAP - 1; else if (H[i].x >= MAP) H[i].x = 0;
+        if (H[i].y < 0) H[i].y = MAP - 1; else if (H[i].y >= MAP) H[i].y = 0;
+      }
+    }
+  });
+
+  [0,1].forEach(i => {
+    if (!die[i]) return;
+    const kr = killer[i];
+    if (kr >= 0){
+      V.k[kr]++; V.gr[kr] += KILL_GROW;
+      V.feed = '⚔️ P' + (kr + 1) + ', P' + (i + 1) + "'i öldürdü! (+25 XP)";
+    } else {
+      V.feed = '💀 P' + (i + 1) + ' kendini yok etti';
+    }
+    V.fid++;
+    V.sn[i] = []; V.rs[i] = adm.quick ? 1 : RESPAWN_TICKS; V.gr[i] = 0;
+    burst({x: H[i].x, y: H[i].y}, '#ef4444');
+  });
+  if (die[0] || die[1]){
+    toast(V.feed); vib(60); beep(kill(killer), .15, 'sawtooth');
+    for (let i = 0; i < 2; i++) if (V.k[i] >= V.target) return vEnd(i);
+  }
+
+  let ate = false;
+  [0,1].forEach(i => {
+    if (!alive[i] || die[i]) return;
+    V.sn[i].unshift(H[i]);
+    if (H[i].x === V.food.x && H[i].y === V.food.y){ V.sc[i]++; ate = true; }
+    else if (V.gr[i] > 0) V.gr[i]--;
+    else V.sn[i].pop();
+  });
+  if (ate){ V.food = vfree(); beep(600, .06); vib(15); }
+  updV();
+  send({t:'s', s:V});
+}
+function updV(){
+  if (!V) return;
+  $('gScore').textContent = '⚔ ' + V.k[0] + ' : ' + V.k[1];
+  $('gLvl').textContent = S.lvl;
+}
+function vEnd(w){
+  V.over = true; V.win = w;
+  send({t:'s', s:V});
+  finishV();
+}
+function finishV(){
+  if (vEnded) return;
+  vEnded = true;
+  const me = mode === 'guest' ? 1 : 0;
+  const res = mode === 'local' ? 'draw' : V.win === 2 ? 'draw' : V.win === me ? 'win' : 'lose';
+  const kills = mode === 'local' ? V.k[0] + V.k[1] : V.k[me];
+  const foods = mode === 'local' ? V.sc[0] + V.sc[1] : V.sc[me];
+  const c = {win:30, draw:15, lose:10}[res] + kills * 10 + foods;
+  const x = {win:40, draw:20, lose:15}[res] + kills * 25 + foods * 5;
+  const oldLvl = S.lvl;
+  S.coins += c; addXp(x);
+  S.ms[0] = (S.ms[0] || 0) + foods;
+  S.ms[1] = Math.max(S.ms[1] || 0, foods);
+  S.ms[2] = (S.ms[2] || 0) + 1;
+  S.ms[3] = (S.ms[3] || 0) + kills;
+  save();
+  vib([100, 50, 100]); beep(V.win === me ? 880 : 150, .4, 'triangle');
+  $('overTitle').textContent =
+    mode === 'local' ? '🏆 Oyuncu ' + (V.win + 1) + ' Kazandı!' :
+    V.win === me ? '🏆 Kazandın!' : '💀 Kaybettin';
+  $('sum').innerHTML =
+    'Kill: <b>' + V.k[0] + '</b> : <b>' + V.k[1] + '</b><br>' +
+    '⚔️ Aldığın kill: <b>' + kills + '</b> &nbsp; 🍎 Yem: <b>' + foods + '</b><br>' +
+    'Kazanılan: 🪙 <b>' + c + '</b> &nbsp; ⭐ <b>' + x + ' XP</b><br>' +
+    'Seviye: <b>' + S.lvl + '</b>' + (S.lvl > oldLvl ? ' 🎉' : '') + ' &nbsp; Toplam 🪙 ' + S.coins +
+    (mode === 'guest' ? '<br><small>Host yeniden başlatınca oyun otomatik açılır.</small>' : '');
+  setAgain();
+  show('over');
+}
+function drawV(t){
+  if (!V) return;
+  const me = mode === 'guest' ? 1 : 0;
+  VIEW = VIEW_BASE; recomputeScale();
+  if (V.sn[me] && V.sn[me].length){
+    updateCam(V.sn[me][0].x*TILE + TILE/2, V.sn[me][0].y*TILE + TILE/2);
+  }
+
+  bgDraw();
+  foodDraw(V.food, t);
+  V.sn.forEach((sn, i) => {
+    if (!sn.length) return;
+    const blink = V.inv[i] > 0 && ((t / 100 | 0) % 2);
+    ctx.globalAlpha = blink ? .35 : 1;
+    drawSnake(sn, SKINS.find(k => k.id === V.sk[i]) || SKINS[0], V.dr[i], t, false, null);
+    ctx.globalAlpha = 1;
+    const hp = t2s(sn[0].x, sn[0].y);
+    if (hp.x > -40 && hp.x < 440 && hp.y > -40 && hp.y < 440){
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText('P' + (i + 1) + (V.inv[i] > 0 ? ' 🛡' : ''), hp.x, hp.y - ts()/2 - 2);
+    }
+  });
+  V.rs.forEach((r, i) => {
+    if (r > 0){
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = 'bold 16px system-ui';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('💀 P' + (i + 1) + ' yeniden doğuyor...', 200, 170 + i * 30);
+    }
+  });
+  parts = parts.filter(p => p.l > 0);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.l -= .04;
+    ctx.globalAlpha = Math.max(p.l, 0); ctx.fillStyle = p.c;
+    ctx.fillRect(p.x, p.y, 4, 4);
+  });
+  ctx.globalAlpha = 1;
+
+  drawMini(MAP, V.sn.map((sn, i) => ({sn, color: ['#4ade80','#60a5fa'][i]})), [V.food], cam);
+}
+function vloop(t){
+  if (!vRun || !V){ vLoop = false; return; }
+  if (!last) last = t;
+  const dt = Math.min(100, t - last); last = t;
+  if (mode !== 'guest'){
+    acc += dt;
+    const iv = Math.max(70, 140 - (V.sc[0] + V.sc[1]) * 2) * adm.speed;
+    let safety = 8;
+    while (acc >= iv && vRun && !V.over && safety-- > 0){ acc -= iv; vstep(); }
+  }
+  if (vRun){ drawV(t); requestAnimationFrame(vloop); } else vLoop = false;
+}
+function startVLoop(){
+  last = performance.now(); acc = 0;
+  if (!vLoop){ vLoop = true; requestAnimationFrame(vloop); }
+}
+function beginV(){
+  show('game'); layout(); vRun = true; parts = []; updV(); startVLoop();
+}
+function startLocal(){ mode = 'local'; closeConn(); initV(); snapCam(spawnCells(0)[0].x*TILE, spawnCells(0)[0].y*TILE); beginV(); }
+function hostStart(){ mode = 'host'; initV(); snapCam(spawnCells(0)[0].x*TILE, spawnCells(0)[0].y*TILE); beginV(); send({t:'s', s:V}); }
+
+function layout(){
+  const v = mode !== 'solo';
+  $('chipCoin').style.display = v ? 'none' : '';
+  $('posChip').style.display = '';
+  $('pauseBtn').style.display = v ? 'none' : '';
+  document.body.classList.toggle('twoP', mode === 'local');
+  $('joyR').style.display = mode === 'local' ? 'block' : 'none';
+  $('nitroWrap').style.display = mode === 'solo' ? 'flex' : 'none';
+  $('lblL').textContent = mode === 'local' ? 'P1' : '';
+  $('lblR').textContent = mode === 'local' ? 'P2' : '';
+  $('fx').textContent = mode === 'local' ? '🕹️ P1 sol joystick · P2 sağ joystick — İlk 5 kill kazanır!'
+    : mode === 'host' ? 'Sen: P1 (ev sahibi) — İlk 5 kill kazanır!' : mode === 'guest' ? 'Sen: P2 (konuk) — İlk 5 kill kazanır!' : '';
+  if (!v){ $('gScore').textContent = 0; }
+}
+
+/* ---------- ONLINE ---------- */
+let pc = null, dc = null;
+const enc = p => {
+  const b = btoa(unescape(encodeURIComponent(JSON.stringify(p.localDescription))));
+  return b.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+const dec = s => {
+  let b = s.trim().replace(/-/g, '+').replace(/_/g, '/');
+  while (b.length % 4) b += '=';
+  return JSON.parse(decodeURIComponent(escape(atob(b))));
+};
+function send(o){ if (dc && dc.readyState === 'open') dc.send(JSON.stringify(o)); }
+function closeConn(){
+  const d = dc, p = pc; dc = null; pc = null;
+  try { d && d.close(); } catch(e){}
+  try { p && p.close(); } catch(e){}
+}
+function leave(){ closeConn(); mode = 'solo'; show('menu'); }
+function lost(){
+  if (!pc) return;
+  toast('🔌 Bağlantı koptu');
+  closeConn(); mode = 'solo'; show('menu');
+}
+function mkPc(){
+  closeConn();
+  const p = pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  p.onconnectionstatechange = () => {
+    if (p !== pc) return;
+    if (['failed','disconnected','closed'].includes(p.connectionState)) lost();
+  };
+}
+function waitIce(p){
+  return new Promise(r => {
+    if (p.iceGatheringState === 'complete') return r();
+    const f = () => { if (p.iceGatheringState === 'complete'){ p.removeEventListener('icegatheringstatechange', f); r(); } };
+    p.addEventListener('icegatheringstatechange', f);
+    setTimeout(r, 4000);
+  });
+}
+function setupDc(ch){
+  dc = ch;
+  ch.onopen = () => {
+    if (ch !== dc) return;
+    if (pc && pc.isHost){
+      const stat = $('mpStat');
+      if (stat){
+        stat.innerHTML = '';
+        stat.appendChild(document.createTextNode('✅ Bağlandı!'));
+        stat.appendChild(document.createElement('br'));
+        const btn = el('button', 'btn', '▶ Oyunu Başlat');
+        btn.style.marginTop = '8px';
+        btn.onclick = () => hostStart();
+        stat.appendChild(btn);
+      }
+    } else {
+      $('mpStat').textContent = '✅ Bağlandı! Host oyunu başlatınca oyun açılır.';
+      send({t:'hi', skin:S.skin});
+    }
+    beep(700, .1, 'triangle');
+  };
+  ch.onmessage = e => { try { onMsg(JSON.parse(e.data)); } catch(err){} };
+  ch.onclose = () => { if (ch === dc) lost(); };
+}
+function onMsg(m){
+  if (m.t === 'hi'){ gSkin = m.skin; toast('👤 Arkadaşın bağlandı'); }
+  else if (m.t === 'd') setV(1, m.x, m.y);
+  else if (m.t === 'a') adm.rgod = !!m.god;
+  else if (m.t === 's') gotState(m.s);
+}
+function gotState(s){
+  const isNew = !V || V.rid !== s.rid;
+  V = s;
+  if (isNew){
+    mode = 'guest'; vEnded = false; lastFid = s.fid;
+    const me = 1;
+    if (V.sn[me] && V.sn[me].length) snapCam(V.sn[me][0].x*TILE + TILE/2, V.sn[me][0].y*TILE + TILE/2);
+    beginV();
+  } else if (s.fid !== lastFid){
+    lastFid = s.fid;
+    if (s.feed){ toast(s.feed); vib(40); beep(500, .1, 'sawtooth'); }
+  }
+  if (V.over){ if (!vEnded) finishV(); }
+  else updV();
+}
+
+function box(text){
+  const b = $('mpBox');
+  b.style.display = 'flex';
+  b.innerHTML = '';
+  const item = el('div', 'item', text);
+  b.appendChild(item);
+  return b;
+}
+function copyEl(id){
+  const elm = $(id); if (!elm) return;
+  elm.select();
+  try { navigator.clipboard.writeText(elm.value); } catch(e){ document.execCommand('copy'); }
+  toast('📋 Kopyalandı');
+}
+function makeTA(id, readonly, placeholder){
+  const ta = document.createElement('textarea');
+  ta.id = id;
+  if (readonly) ta.readOnly = true;
+  if (placeholder) ta.placeholder = placeholder;
+  return ta;
+}
+
+async function hostInit(){
+  mode = 'solo'; gSkin = null;
+  box('⏳ Kod hazırlanıyor...');
+  try {
+    mkPc(); pc.isHost = true;
+    setupDc(pc.createDataChannel('g'));
+    await pc.setLocalDescription(await pc.createOffer());
+    await waitIce(pc);
+    const b = $('mpBox');
+    b.innerHTML = '';
+    const item = el('div', 'item');
+    item.style.flexDirection = 'column';
+    item.style.alignItems = 'stretch';
+
+    item.appendChild(el('b', null, '1) Bu kodu arkadaşına gönder:'));
+    const ta1 = makeTA('offOut', true);
+    ta1.value = enc(pc);
+    item.appendChild(ta1);
+    const b1 = el('button', 'btn alt', '📋 Kopyala');
+    b1.onclick = () => copyEl('offOut');
+    item.appendChild(b1);
+
+    const l2 = el('b', null, '2) Arkadaşının cevap kodunu yapıştır:');
+    l2.style.marginTop = '8px';
+    item.appendChild(l2);
+    const ta2 = makeTA('ansIn', false, 'Cevap kodu');
+    item.appendChild(ta2);
+    const b2 = el('button', 'btn', '🔌 Bağlan');
+    b2.onclick = hostConnect;
+    item.appendChild(b2);
+
+    const stat = el('div', null, '');
+    stat.id = 'mpStat';
+    stat.style.marginTop = '8px';
+    stat.style.textAlign = 'center';
+    item.appendChild(stat);
+
+    b.appendChild(item);
+  } catch(e){ toast('Hata: oda kurulamadı'); }
+}
+async function hostConnect(){
+  try {
+    await pc.setRemoteDescription(dec($('ansIn').value));
+    $('mpStat').textContent = '⏳ Bağlanıyor...';
+  } catch(e){ toast('Geçersiz kod!'); }
+}
+function joinInit(){
+  mode = 'solo';
+  const b = $('mpBox');
+  b.innerHTML = '';
+  b.style.display = 'flex';
+  const item = el('div', 'item');
+  item.style.flexDirection = 'column';
+  item.style.alignItems = 'stretch';
+
+  item.appendChild(el('b', null, "1) Host'un gönderdiği kodu yapıştır:"));
+  const ta1 = makeTA('offIn', false, 'Host kodu');
+  item.appendChild(ta1);
+  const b1 = el('button', 'btn', 'Cevap Kodu Oluştur');
+  b1.onclick = joinMake;
+  item.appendChild(b1);
+  const out = el('div', null, '');
+  out.id = 'joinOut';
+  item.appendChild(out);
+  const stat = el('div', null, '');
+  stat.id = 'mpStat';
+  stat.style.marginTop = '8px';
+  stat.style.textAlign = 'center';
+  item.appendChild(stat);
+
+  b.appendChild(item);
+}
+async function joinMake(){
+  try {
+    const off = dec($('offIn').value);
+    mkPc(); pc.isHost = false;
+    pc.ondatachannel = e => setupDc(e.channel);
+    await pc.setRemoteDescription(off);
+    await pc.setLocalDescription(await pc.createAnswer());
+    $('joinOut').textContent = '⏳ Kod hazırlanıyor...';
+    await waitIce(pc);
+    const out = $('joinOut');
+    out.innerHTML = '';
+    out.appendChild(el('b', null, "2) Bu cevap kodunu host'a gönder:"));
+    const ta2 = makeTA('ansOut', true);
+    ta2.value = enc(pc);
+    out.appendChild(ta2);
+    const b2 = el('button', 'btn alt', '📋 Kopyala');
+    b2.onclick = () => copyEl('ansOut');
+    out.appendChild(b2);
+    $('mpStat').textContent = '⏳ Host bağlanınca otomatik bağlanır...';
+  } catch(e){ toast('Geçersiz kod!'); }
+}
+
+/* ---------- ADMIN ---------- */
+function openAdminLogin(){
+  if (adm.ok){ show('admin'); return; }
+  $('admCode').value = '';
+  show('admLogin');
+}
+function admLogin(){
+  if (Date.now() < adm.lock) return toast('⏳ Çok fazla deneme, bekle...');
+  if ($('admCode').value.trim() === ADMIN_CODE){
+    adm.ok = true; adm.fails = 0;
+    beep(880, .15, 'triangle');
+    toast('✅ Admin aktif');
+    show('admin');
+  } else {
+    vib(120); beep(150, .2, 'sawtooth');
+    if (++adm.fails >= 3){ adm.lock = Date.now() + 30000; adm.fails = 0; toast('🔒 30 sn kilitlendi'); }
+    else toast('❌ Yanlış kod');
+  }
+}
+function admExit(){
+  adm.ok = false;
+  adm.god = false;
+  adm.rgod = false;
+  adm.quick = false;
+  adm.speed = 1;
+  adm.target = 0;
+  send({t:'a', god: false});
+  show('menu');
+}
+
+let admAmt = '100';
+const aval = () => Math.max(0, parseInt(($('aVal') && $('aVal').value) || admAmt) || 0);
+
+const ADM_ACTS = {
+  coin:   () => { const n = aval(); S.coins += n; return '🪙 +' + n; },
+  xp:     () => { const n = aval(); addXp(n); return '⭐ +' + n + ' XP'; },
+  level:  () => { const n = aval(); if (n < 1) return '⚠️ En az 1 gir'; S.lvl = n; S.xp = 0; return '📈 Seviye ' + n; },
+  best:   () => { S.best = aval(); return '🏆 Rekor ' + S.best; },
+  kills:  () => { S.ms[3] = aval(); return '⚔️ Kill ' + S.ms[3]; },
+  unlock: () => { S.own = [...SKINS, ...THEMES].map(x => x.id); return '🔓 Hepsi açıldı'; },
+  ups:    () => { UPS.forEach(u => S.up[u.id] = u.max); return '⚡ Yükseltmeler MAX'; },
+  ms:     () => { S.ms = MS.map(m => m.g); return '📜 Görevler tamamlandı'; },
+  msr:    () => { S.mc = MS.map(() => 0); return '🔁 Ödüller sıfırlandı'; },
+  god:    () => {
+    adm.god = !adm.god;
+    send({t:'a', god: adm.god});
+    return adm.god ? '👑 God AÇIK' : '👑 God KAPALI';
+  },
+  quick:  () => { adm.quick = !adm.quick; return adm.quick ? '⚡ Anında doğuş AÇIK' : '⚡ Anında doğuş KAPALI'; },
+  target: () => {
+    const n = aval(); if (n < 1) return '⚠️ En az 1 gir';
+    adm.target = n; return '🎯 Kill hedefi: ' + n;
+  },
+  speed:  () => {
+    adm.speed = adm.speed === 1 ? 1.5 : adm.speed === 1.5 ? .6 : 1;
+    return adm.speed === 1 ? '🐢 Hız normal' : adm.speed > 1 ? '🐢 Yavaş mod' : '🚀 Hızlı mod';
+  },
+  mode:   () => { S.mode = S.mode === 'wall' ? 'wrap' : 'wall'; return '🧱 Mod: ' + S.mode; },
+  reset:  () => {
+    if (!confirm('Tüm ilerleme silinsin mi?')) return null;
+    S = def(); return '🗑 Veri sıfırlandı';
+  },
+  copy:   () => { copyEl('aSave'); return null; },
+  import: () => {
+    try {
+      const o = JSON.parse($('aSave').value);
+      S = Object.assign(def(), o);
+      if (!Array.isArray(S.own)) S.own = ['green','dark'];
+      if (!S.up) S.up = {coin:0,xp:0,slow:0,shield:0,nitro:0};
+      if (typeof S.up.nitro !== 'number') S.up.nitro = 0;
+      validateSkin();
+      return '📥 Yüklendi';
+    } catch(e){ return '❌ Geçersiz JSON'; }
+  }
+};
+
+function renderAdmin(){
+  if (!adm.ok){ show('admLogin'); return; }
+  const keep = $('aVal') ? $('aVal').value : admAmt;
+  const box = $('admBox');
+  box.innerHTML = '';
+
+  const info = el('div', 'item');
+  const inf = el('div', 'inf');
+  inf.appendChild(document.createTextNode('🪙 ' + S.coins + ' · Sv. ' + S.lvl + ' · XP ' + S.xp + '/' + need(S.lvl)));
+  const sm = el('small');
+  sm.appendChild(document.createTextNode('🏆 Rekor ' + S.best + ' · Mod: ' + S.mode + ' · ⚔️ Kill: ' + (S.ms[3] || 0)));
+  sm.appendChild(document.createElement('br'));
+  sm.appendChild(document.createTextNode('👑 God: ' + (adm.god ? 'AÇIK' : 'kapalı') + ' · Hız: x' + adm.speed + ' · 🎯 Hedef: ' + (adm.target || KILL_TARGET)));
+  inf.appendChild(sm);
+  info.appendChild(inf);
+  box.appendChild(info);
+
+  const aVal = document.createElement('input');
+  aVal.id = 'aVal';
+  aVal.type = 'number';
+  aVal.inputMode = 'numeric';
+  aVal.placeholder = 'Miktar gir';
+  aVal.value = keep;
+  box.appendChild(aVal);
+
+  const gq = el('div', 'grid2');
+  [['100','100'],['1000','1000'],['10000','10000'],['Temizle','0']].forEach(([txt, q]) => {
+    const b = el('button', 'btn alt', txt);
+    b.type = 'button';
+    b.onclick = () => {
+      admAmt = q === '0' ? '' : q;
+      aVal.value = admAmt;
+    };
+    gq.appendChild(b);
+  });
+  box.appendChild(gq);
+
+  const acts = [
+    ['coin', '🪙 Coin Ekle'],
+    ['xp', '⭐ XP Ekle'],
+    ['level', '📈 Seviye Ayarla'],
+    ['best', '🏆 Rekor Ayarla'],
+    ['kills', '⚔️ Kill Ayarla'],
+    ['unlock', '🔓 Tüm Skin/Tema'],
+    ['ups', '⚡ Yükseltmeler MAX'],
+    ['ms', '📜 Görevleri Bitir'],
+    ['msr', '🔁 Görev Ödülü Sıfırla'],
+    ['god', adm.god ? '👑 God: AÇIK' : '👑 God: KAPALI'],
+    ['speed', '🐢 Hız x' + adm.speed],
+    ['mode', '🧱 Modu Değiştir'],
+    ['quick', adm.quick ? '⚡ Hızlı Doğuş: AÇIK' : '⚡ Hızlı Doğuş: KAPALI'],
+    ['target', '🎯 Kill Hedefi Ayarla'],
+    ['reset', '🗑 Tüm Veriyi Sıfırla']
+  ];
+  const ga = el('div', 'grid2');
+  acts.forEach(([k, label]) => {
+    const b = el('button', 'btn alt', label);
+    b.type = 'button';
+    b.onclick = () => {
+      const fn = ADM_ACTS[k];
+      if (!fn) return;
+      admAmt = aVal.value;
+      const msg = fn();
+      if (msg === null) return;
+      save(); beep(700, .08, 'triangle');
+      renderAdmin();
+      toast(msg);
+    };
+    ga.appendChild(b);
+  });
+  box.appendChild(ga);
+
+  box.appendChild(el('b', null, '💾 Kayıt Yedeği'));
+  const aSave = makeTA('aSave', false, 'Kayıt JSON');
+  aSave.value = JSON.stringify(S).replace(/</g, '\\u003c');
+  box.appendChild(aSave);
+
+  const gc = el('div', 'grid2');
+  const bCopy = el('button', 'btn alt', '📋 Kopyala');
+  bCopy.type = 'button';
+  bCopy.onclick = () => { copyEl('aSave'); };
+  gc.appendChild(bCopy);
+  const bImp = el('button', 'btn alt', '📥 İçe Aktar');
+  bImp.type = 'button';
+  bImp.onclick = () => {
+    const msg = ADM_ACTS.import();
+    if (msg === null) return;
+    save(); beep(700, .08, 'triangle');
+    renderAdmin();
+    toast(msg);
+  };
+  gc.appendChild(bImp);
+  box.appendChild(gc);
+}
+
+/* ---------- KONTROLLER ---------- */
+function setDir(x, y){
+  if (!dir) return;
+  if (x === -dir.x && y === -dir.y) return;
+  nd = {x, y};
+}
+function ctl(slot, x, y){
+  if (mode === 'solo') return setDir(x, y);
+  if (mode === 'local') return setV(slot, x, y);
+  if (mode === 'host') return setV(0, x, y);
+  if (mode === 'guest') send({t:'d', x, y});
+}
+
+const K1 = {w:[0,-1], s:[0,1], a:[-1,0], d:[1,0]};
+const K2 = {arrowup:[0,-1], arrowdown:[0,1], arrowleft:[-1,0], arrowright:[1,0]};
+addEventListener('keydown', e => {
+  if (/INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (K1[k]) ctl(0, ...K1[k]);
+  else if (K2[k]) ctl(mode === 'local' ? 1 : 0, ...K2[k]);
+  else if (k === ' ' || k === 'p') togglePause();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && alive && !paused && mode === 'solo') paused = true;
+  if (document.hidden){ nitroHeld = false; nitroActive = false; }
+});
+
+setupNitroBtn();
+refreshMenu();
+</script>
+</body>
+</html>
